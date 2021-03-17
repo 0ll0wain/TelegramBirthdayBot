@@ -8,10 +8,10 @@ from telegram.ext import (
     CallbackContext,
     CallbackQueryHandler,
 )
-from datetime import datetime, date, time, timezone, timedelta
+from datetime import datetime, date, time, timedelta
 import logging
 import telegram
-import pytz
+from pytz import timezone
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 
 BIRTHDAY, BIRTHYEAR, NAME, INPUTID, PRIORITY = range(5)
@@ -29,7 +29,7 @@ logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO
 )
 jobber = updater.job_queue
-timezone = timezone(timedelta(hours=1))
+timezone = timezone("Europe/Berlin")
 
 
 def daily_callback(context: telegram.ext.CallbackContext):
