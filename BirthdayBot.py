@@ -119,7 +119,7 @@ def start(update, context):
         context.user_data["admin"] = False
     context.user_data["chat-id"] = update.effective_chat.id
 
-    # time(hour, minute and second)
+    # time(hour, minute, second)
     jobber.run_daily(
         daily_callback,
         dtm.time(8),
@@ -147,7 +147,7 @@ def add(update: Updater, context: CallbackContext) -> int:
 def addBirthday(update: Updater, context: CallbackContext) -> int:
     value = "".join(update.message.text)
     try:
-        day = datetime.strptime(value, "%d.%m")
+        day = dtm.datetime.strptime(value, "%d.%m")
         context.user_data["t_birthday"] = day.strftime("%d.%m")
     except Exception:
         context.bot.send_message(
@@ -165,7 +165,9 @@ def addBirthday(update: Updater, context: CallbackContext) -> int:
 def addBirthyear(update: Updater, context: CallbackContext) -> int:
     value = "".join(update.message.text)
     try:
-        context.user_data["t_birthyear"] = datetime.strptime(value, "%Y").strftime("%Y")
+        context.user_data["t_birthyear"] = dtm.datetime.strptime(value, "%Y").strftime(
+            "%Y"
+        )
     except:
         context.bot.send_message(
             chat_id=update.effective_chat.id,
