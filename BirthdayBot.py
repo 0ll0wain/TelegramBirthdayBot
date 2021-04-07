@@ -7,36 +7,41 @@ from telegram.ext import (
     ConversationHandler,
     CallbackContext,
     CallbackQueryHandler,
+    Defaults,
 )
-from datetime import datetime, date, time, timedelta
+import datetime as dtm
 import logging
 import telegram
-from pytz import timezone
+import pytz
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
+import credentials
 
 BIRTHDAY, BIRTHYEAR, NAME, INPUTID, PRIORITY = range(5)
 LOW, MEDIUM, HIGH = range(3)
 
+defaults = Defaults(tzinfo=pytz.timezone("Europe/Berlin"))
 pp = PicklePersistence(filename="birthdayBot.pickle")
-bot = telegram.Bot(token="1190164594:AAG3HWiPHY-6xmJvoPqt58vYKrvogZUnUjQ")
+
+bot = telegram.Bot(token=credentials.gebbybot_token)
 updater = Updater(
-    token="1190164594:AAG3HWiPHY-6xmJvoPqt58vYKrvogZUnUjQ",
+    token=credentials.gebbybot_token,
     persistence=pp,
     use_context=True,
+    defaults=defaults,
 )
 dispatcher = updater.dispatcher
 logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO
 )
 jobber = updater.job_queue
-timezone = timezone("Europe/Berlin")
+timezone = pytz.timezone("Europe/Berlin")
 
 
 def daily_callback(context: telegram.ext.CallbackContext):
     user_data = context.job.context
-    today = datetime.today()
-    week = today + timedelta(days=7)
-    month = today + timedelta(days=30)
+    today = dtm.datetime.today()
+    week = today + dtm.timedelta(days=7)
+    month = today + dtm.timedelta(days=30)
 
     payload = []
 
@@ -76,14 +81,15 @@ def daily_callback(context: telegram.ext.CallbackContext):
                 else ""
             )
 
-    if payload == "" and (user_data["admin"] or user_data["manualCheck"]):
+    if payload == [] and (user_data["admin"] or user_data["manualCheck"]):
         user_data["manualCheck"] = False
         payload.append("I'm alive. No Birthdays today.")
 
-    context.bot.send_message(
-        chat_id=user_data["chat-id"],
-        text="".join(payload),
-    )
+    if payload != []:
+        context.bot.send_message(
+            chat_id=user_data["chat-id"],
+            text="".join(payload),
+        )
 
 
 def check_todays_birthdays(update, context):
@@ -116,7 +122,7 @@ def start(update, context):
     # time(hour, minute and second)
     jobber.run_daily(
         daily_callback,
-        time(8, tzinfo=timezone),
+        dtm.time(8),
         context=context.user_data,
     )
     pp.flush()
@@ -386,6 +392,7 @@ dispatcher.add_handler(CommandHandler("start", start))
 dispatcher.add_handler(CommandHandler("help", help))
 dispatcher.add_handler(CommandHandler("list", listPersons))
 dispatcher.add_handler(CommandHandler("credits", credits))
+dispatcher.add_handler(CommandHandler("test", test))
 
 
 convAdd_handler = ConversationHandler(
