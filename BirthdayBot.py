@@ -92,6 +92,18 @@ def daily_callback(context: telegram.ext.CallbackContext):
         )
 
 
+if "user_list" in dispatcher.bot_data:
+    for user in dispatcher.bot_data["user_list"]:
+        jobber.run_daily(
+            daily_callback,
+            dtm.time(8),
+            context=user,
+        )
+
+else:
+    dispatcher.bot_data["user_list"] = []
+
+
 def check_todays_birthdays(update, context):
     context.user_data["manualCheck"] = True
     jobber.run_once(daily_callback, 0, context=context.user_data)
@@ -117,14 +129,15 @@ def start(update, context):
         context.user_data["dates"] = {}
         context.user_data["persons"] = {}
         context.user_data["admin"] = False
-    context.user_data["chat-id"] = update.effective_chat.id
+        # time(hour, minute, second)
+        jobber.run_daily(
+            daily_callback,
+            dtm.time(8),
+            context=context.user_data,
+        )
+        context.bot_data["user_list"].append(context.user_data)
 
-    # time(hour, minute, second)
-    jobber.run_daily(
-        daily_callback,
-        dtm.time(8),
-        context=context.user_data,
-    )
+    context.user_data["chat-id"] = update.effective_chat.id
     pp.flush()
     print("New User:" + str(update.message.chat))
 
