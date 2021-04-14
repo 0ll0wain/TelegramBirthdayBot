@@ -37,6 +37,7 @@ jobber = updater.job_queue
 timezone = pytz.timezone("Europe/Berlin")
 
 
+
 def daily_callback(context: telegram.ext.CallbackContext):
     user_data = context.job.context
     today = dtm.datetime.today()
@@ -80,8 +81,9 @@ def daily_callback(context: telegram.ext.CallbackContext):
                 if user_data["persons"][id]["priority"] == HIGH
                 else ""
             )
-
     if payload == [] and (user_data["admin"] or user_data["manualCheck"]):
+        print("Entered Manual/Admin-check function")
+        print(user_data["admin"])
         user_data["manualCheck"] = False
         payload.append("I'm alive. No Birthdays today.")
 
@@ -91,18 +93,13 @@ def daily_callback(context: telegram.ext.CallbackContext):
             text="".join(payload),
         )
 
-
-if "user_list" in dispatcher.bot_data:
-    for user in dispatcher.bot_data["user_list"]:
-        jobber.run_daily(
-            daily_callback,
-            dtm.time(8),
-            context=user,
-        )
-
-else:
-    dispatcher.bot_data["user_list"] = []
-
+def load_daily_user_job():
+    for user in dispatcher.user_data.values():
+       jobber.run_daily(
+          daily_callback,
+          dtm.time(8),
+          context=user,
+       )
 
 def check_todays_birthdays(update, context):
     context.user_data["manualCheck"] = True
@@ -135,9 +132,8 @@ def start(update, context):
             dtm.time(8),
             context=context.user_data,
         )
-        context.bot_data["user_list"].append(context.user_data)
+        context.user_data["chat-id"] = update.effective_chat.id
 
-    context.user_data["chat-id"] = update.effective_chat.id
     pp.flush()
     print("New User:" + str(update.message.chat))
 
@@ -145,7 +141,7 @@ def start(update, context):
 def help(update, context):
     context.bot.send_message(
         chat_id=update.effective_chat.id,
-        text="/start Start the Bot \n/add Add a new Birthday\n/del Delete a Birthday by ID \n/list List all entries with ID, Name, Birthday and Priority\n/listDates Show a list sorted by Birthdays\n/check Check manually todays birthdays, and the bots status\n/cancel Send during any procedure to cancel the process",
+        text="/start Start the Bot \n/add Add a new Birthday\n/del Delete a Birthday by ID \n/list List all entries with ID, Name, Birthday and Priority\n/dates Shows a list sorted by Days\n/check Check manually todays birthdays, and the bots status\n/cancel Send during any procedure to cancel the process",
     )
 
 
@@ -395,14 +391,14 @@ def listDates(update, context):
 
 def credits(update, context):
     update.message.reply_text(
-        "Version 0.1\nMade by:\nKim Leidolf\nFeedback to:\nkim.leidolf@gmx.de"
+        "Version 1.0\nMade by:\nKim Leidolf\nFeedback to:\nkim.leidolf@gmx.de"
     )
 
 
 dispatcher.add_handler(CommandHandler("enableAdmin", enableAdminInfo))
 dispatcher.add_handler(CommandHandler("disableAdmin", disableAdminInfo))
 dispatcher.add_handler(CommandHandler("check", check_todays_birthdays))
-dispatcher.add_handler(CommandHandler("listDates", listDates))
+dispatcher.add_handler(CommandHandler("dates", listDates))
 dispatcher.add_handler(CommandHandler("start", start))
 dispatcher.add_handler(CommandHandler("help", help))
 dispatcher.add_handler(CommandHandler("list", listPersons))
@@ -436,6 +432,8 @@ convDel_handler = ConversationHandler(
     fallbacks=[CommandHandler("cancel", cancel)],
 )
 dispatcher.add_handler(convDel_handler)
+
+load_daily_user_job()
 
 updater.start_polling()
 updater.idle()
