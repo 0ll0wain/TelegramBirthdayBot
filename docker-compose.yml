@@ -1,0 +1,7 @@
+version: "3"
+services:
+  telegrambot:
+    build: ./
+    volumes:
+      - ./birthdayBot.pickle:/data/birthdayBot.pickle
+    # Add other container configuration as needed

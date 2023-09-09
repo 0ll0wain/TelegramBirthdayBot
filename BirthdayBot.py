@@ -20,7 +20,7 @@ BIRTHDAY, BIRTHYEAR, NAME, INPUTID, PRIORITY = range(5)
 LOW, MEDIUM, HIGH = range(3)
 
 defaults = Defaults(tzinfo=pytz.timezone("Europe/Berlin"))
-pp = PicklePersistence(filename="birthdayBot.pickle")
+pp = PicklePersistence(filename="/data/birthdayBot.pickle")
 
 bot = telegram.Bot(token=credentials.gebbybot_token)
 updater = Updater(
@@ -35,7 +35,6 @@ logging.basicConfig(
 )
 jobber = updater.job_queue
 timezone = pytz.timezone("Europe/Berlin")
-
 
 
 def daily_callback(context: telegram.ext.CallbackContext):
@@ -93,13 +92,15 @@ def daily_callback(context: telegram.ext.CallbackContext):
             text="".join(payload),
         )
 
+
 def load_daily_user_job():
     for user in dispatcher.user_data.values():
-       jobber.run_daily(
-          daily_callback,
-          dtm.time(8),
-          context=user,
-       )
+        jobber.run_daily(
+            daily_callback,
+            dtm.time(8),
+            context=user,
+        )
+
 
 def check_todays_birthdays(update, context):
     context.user_data["manualCheck"] = True
