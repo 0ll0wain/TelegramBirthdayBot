@@ -2,6 +2,7 @@ version: "3"
 services:
   telegrambot:
     build: ./
+    restart: unless-stopped
     volumes:
       - ./birthdayBot.pickle:/data/birthdayBot.pickle
     # Add other container configuration as needed
